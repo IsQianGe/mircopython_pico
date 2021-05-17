@@ -214,6 +214,8 @@ const char rp2_help_text[] =
     "    methods: read(nbytes, write=0x00), write(buf), write_readinto(wr_buf, rd_buf)\n"
     "  machine.Timer(freq, callback) -- create a software timer object\n"
     "    eg: machine.Timer(freq=1, callback=lambda t:print(t))\n"
+    "  network.WLAN_UART(mode) -- Turn on WiFi in mode\n"
+    "    eg: network.WLAN_UART(network.STA_IF)\n"
     "\n"
     "Pins are numbered 0-29, and 26-29 have ADC capabilities\n"
     "Pin IO modes are: Pin.IN, Pin.OUT, Pin.ALT\n"
