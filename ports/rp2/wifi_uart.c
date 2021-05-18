@@ -51,8 +51,21 @@ typedef struct _machine_uart_obj_t {
     uint8_t stop;
     uint8_t tx;
     uint8_t rx;
+    uint16_t timeout;       // timeout waiting for first char (in ms)
+    uint16_t timeout_char;  // timeout waiting between chars (in ms)
+    uint8_t invert;
+    ringbuf_t read_buffer;
+    bool read_lock;
+    ringbuf_t write_buffer;
+    bool write_lock;
 } machine_uart_obj_t;
 
+STATIC void uart_drain_rx_fifo(machine_uart_obj_t *self) {
+    while (uart_is_readable(self->uart)) {
+        // try to write the data, ignore the fail
+        ringbuf_put(&(self->read_buffer), uart_get_hw(self->uart)->dr);
+    }
+}
 STATIC void kmp_get_next(const char* targe, int next[])
 {  
     int targe_Len = strlen(targe);  
@@ -649,7 +662,10 @@ void rx_empty(esp8266_obj* nic)
 	char data = 0;
 	const mp_stream_p_t * uart_stream = mp_get_stream(nic->uart_obj);
 	machine_uart_obj_t *self = MP_OBJ_TO_PTR(nic->uart_obj);
-    while(uart_is_readable(self->uart)  > 0) {
+    self->read_lock = true;
+    uart_drain_rx_fifo(self);
+    self->read_lock = false;
+    while(ringbuf_avail(&self->read_buffer) > 0) {
         uart_stream->read(nic->uart_obj,&data,1,&errcode); 
     }
 }
@@ -663,7 +679,10 @@ char* recvString_1(esp8266_obj* nic, const char* target1,uint32_t timeout)
 	const mp_stream_p_t * uart_stream = mp_get_stream(nic->uart_obj);
 	machine_uart_obj_t *self = MP_OBJ_TO_PTR(nic->uart_obj);
     while (mp_hal_ticks_ms() - start < timeout) {
-        while(uart_is_readable(self->uart)  > 0) {
+        self->read_lock = true;
+        uart_drain_rx_fifo(self);
+        self->read_lock = false;
+        while(ringbuf_avail(&self->read_buffer) > 0) {
             uart_stream->read(nic->uart_obj,&nic->buffer.buffer[iter++],1,&errcode);
         }
         if (data_find(nic->buffer.buffer,iter,target1) != -1) {
@@ -684,7 +703,10 @@ char* recvString_2(esp8266_obj* nic,char* target1, char* target2, uint32_t timeo
 	const mp_stream_p_t * uart_stream = mp_get_stream(nic->uart_obj);
 	machine_uart_obj_t *self = MP_OBJ_TO_PTR(nic->uart_obj);
     while (mp_hal_ticks_ms() - start < timeout) {
-        while(uart_is_readable(self->uart)  > 0 && iter < ESP8266_BUF_SIZE) {
+        self->read_lock = true;
+        uart_drain_rx_fifo(self);
+        self->read_lock = false;
+        while(ringbuf_avail(&self->read_buffer) > 0 && iter < ESP8266_BUF_SIZE) {
             uart_stream->read(nic->uart_obj,&nic->buffer.buffer[iter++],1,&errcode);
         }
         if (data_find(nic->buffer.buffer,iter,target1) != -1) {
@@ -709,7 +731,10 @@ char* recvString_3(esp8266_obj* nic,char* target1, char* target2,char* target3,u
 	const mp_stream_p_t * uart_stream = mp_get_stream(nic->uart_obj);
 	machine_uart_obj_t *self = MP_OBJ_TO_PTR(nic->uart_obj);
     while (mp_hal_ticks_ms() - start < timeout) {
-        while(uart_is_readable(self->uart)  > 0) {
+        self->read_lock = true;
+        uart_drain_rx_fifo(self);
+        self->read_lock = false;
+        while(ringbuf_avail(&self->read_buffer) > 0) {
             uart_stream->read(nic->uart_obj,&nic->buffer.buffer[iter++],1,&errcode);
         }
         if (data_find(nic->buffer.buffer,iter,target1) != -1) {
