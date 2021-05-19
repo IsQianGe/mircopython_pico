@@ -535,12 +535,11 @@ uint32_t recvPkg(esp8266_obj*nic,char* out_buff, uint32_t out_buff_len, uint32_t
     // wait data from uart buffer if not timeout
     start2 = mp_hal_ticks_ms();
 	machine_uart_obj_t *self = MP_OBJ_TO_PTR(nic->uart_obj);
-    self->read_lock = true;
-    uart_drain_rx_fifo(self);
-    self->read_lock = false;
-    data_len_in_uart_buff = ringbuf_avail(&self->read_buffer);
     do{
-        if(data_len_in_uart_buff > 0)
+        self->read_lock = true;
+        uart_drain_rx_fifo(self);
+        self->read_lock = false;
+        if(ringbuf_avail(&self->read_buffer) > 0)
         {
             uart_stream->read(nic->uart_obj,temp_buff + temp_buff_len,1,&errcode);
             if(find_frame_flag_index == 0 && temp_buff[temp_buff_len] == '+'){
@@ -638,8 +637,7 @@ uint32_t recvPkg(esp8266_obj*nic,char* out_buff, uint32_t out_buff_len, uint32_t
         self->read_lock = true;
         uart_drain_rx_fifo(self);
         self->read_lock = false;
-        data_len_in_uart_buff = ringbuf_avail(&self->read_buffer) ;
-    }while( (timeout || find_frame_flag_index) && (!*peer_closed || data_len_in_uart_buff > 0) );
+    }while( (timeout || find_frame_flag_index) && (!*peer_closed || ringbuf_avail(&self->read_buffer) > 0) );
     size = Buffer_Size(&nic->buffer);
     if( size == 0 && !peer_just_closed && *peer_closed)//peer closed and no data in buffer
     {
