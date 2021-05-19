@@ -209,8 +209,6 @@ STATIC mp_obj_t mqtt_wait_msg(mp_obj_t self_in) {
         // not connected
         mp_raise_OSError(MP_ENOTCONN);
     }
-	char *topic = NULL;
-	char *msg = NULL;
 	if (self->nic_type->mqtt_wait_msg(self, &mqttmsg) > 0) {
 	/*********************************Test****************************************************
 		mp_printf(MP_PYTHON_PRINTER, "test mqtt_wait_msg:1.%s 2.%s \n",

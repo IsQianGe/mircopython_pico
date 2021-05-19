@@ -33,7 +33,7 @@
 #include "mpconfigboard.h"
 //#include "machine_uart.h"
 #include "modnetwork.h"
-//#include "plic.h"
+//#include "plic.h"cd
 //#include "sysctl.h"
 //#include "atomic.h"
 #include "hardware/uart.h"
@@ -379,7 +379,10 @@ bool get_mqttsubrecv(esp8266_obj*nic, uint32_t LinkID, mqtt_msg* mqttmsg)
 	const mp_stream_p_t * uart_stream = mp_get_stream(nic->uart_obj);
 	machine_uart_obj_t *self = MP_OBJ_TO_PTR(nic->uart_obj);
 	while (mp_hal_ticks_ms() - start < 3000) {
-        while(uart_is_readable(self->uart)  > 0) {
+        self->read_lock = true;
+        uart_drain_rx_fifo(self);
+        self->read_lock = false;
+        while(ringbuf_avail(&self->read_buffer) > 0) {
             uart_stream->read(nic->uart_obj,&nic->buffer.buffer[iter++],1,&errcode);
         }
 	}
@@ -532,7 +535,10 @@ uint32_t recvPkg(esp8266_obj*nic,char* out_buff, uint32_t out_buff_len, uint32_t
     // wait data from uart buffer if not timeout
     start2 = mp_hal_ticks_ms();
 	machine_uart_obj_t *self = MP_OBJ_TO_PTR(nic->uart_obj);
-    data_len_in_uart_buff = uart_is_readable(self->uart) ;
+    self->read_lock = true;
+    uart_drain_rx_fifo(self);
+    self->read_lock = false;
+    data_len_in_uart_buff = ringbuf_avail(&self->read_buffer);
     do{
         if(data_len_in_uart_buff > 0)
         {
@@ -629,7 +635,10 @@ uint32_t recvPkg(esp8266_obj*nic,char* out_buff, uint32_t out_buff_len, uint32_t
         {
             return -3;
         }
-        data_len_in_uart_buff = uart_is_readable(self->uart) ;
+        self->read_lock = true;
+        uart_drain_rx_fifo(self);
+        self->read_lock = false;
+        data_len_in_uart_buff = ringbuf_avail(&self->read_buffer) ;
     }while( (timeout || find_frame_flag_index) && (!*peer_closed || data_len_in_uart_buff > 0) );
     size = Buffer_Size(&nic->buffer);
     if( size == 0 && !peer_just_closed && *peer_closed)//peer closed and no data in buffer
