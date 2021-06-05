@@ -141,7 +141,7 @@ STATIC void machine_uart_print(const mp_print_t *print, mp_obj_t self_in, mp_pri
 
 STATIC mp_obj_t machine_uart_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args) {
     enum { ARG_id, ARG_baudrate, ARG_bits, ARG_parity, ARG_stop, ARG_tx, ARG_rx,
-           ARG_timeout, ARG_timeout_char, ARG_invert, ARG_txbuf, ARG_rxbuf};
+           ARG_timeout, ARG_timeout_char, ARG_invert, ARG_txbuf, ARG_rxbuf, ARG_flag};
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_id, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_NONE} },
         { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = -1} },
@@ -155,6 +155,7 @@ STATIC mp_obj_t machine_uart_make_new(const mp_obj_type_t *type, size_t n_args, 
         { MP_QSTR_invert, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
         { MP_QSTR_txbuf, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
         { MP_QSTR_rxbuf, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
+        { MP_QSTR_flag, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
     };
 
     // Parse args.
@@ -163,8 +164,12 @@ STATIC mp_obj_t machine_uart_make_new(const mp_obj_type_t *type, size_t n_args, 
 
     // Get UART bus.
     int uart_id = mp_obj_get_int(args[ARG_id].u_obj);
+    int flag = mp_obj_get_int(args[ARG_flag].u_obj);
     if (uart_id < 0 || uart_id >= MP_ARRAY_SIZE(machine_uart_obj)) {
         mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART(%d) doesn't exist"), uart_id);
+    }
+    if (flag == -1 && uart_id == 1) {
+        mp_raise_msg_varg(&mp_type_ValueError, MP_ERROR_TEXT("UART(%d) doesn't work"), uart_id);
     }
 
     // Get static peripheral object.

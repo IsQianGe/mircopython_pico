@@ -48,7 +48,11 @@ typedef struct _nic_obj_t
 #endif
     mp_obj_t mode;
 } nic_obj_t;
-
+typedef struct _machine_uart1_obj_t {
+    int id;
+    int flag_table;
+    int flag;
+} machine_uart1_obj_t;
 typedef struct _stream_obj_t
 {
     unsigned char stream[2048];
@@ -296,12 +300,12 @@ STATIC mp_obj_t esp8266_make_new(const mp_obj_type_t *type, size_t n_args, size_
 
 #if MICROPY_UART_NIC
     int idx = 0;
-    int uart_wifi = WIFI_UART;
     idx = mp_obj_get_int(args[0]);
+    machine_uart1_obj_t uart_wifi = {3, 4090, 3};
     // set uart to communicate
     //machine_uart_obj_t *wifi_uart = machine_uart_make_new(1);
     //machine_uart_obj_t wifi_uart = machine_uart_obj[WIFI_UART];
-    mp_obj_t wifi_uart = machine_uart_type.make_new((mp_obj_type_t *)&machine_uart_type, 1, 0, &uart_wifi);
+    mp_obj_t wifi_uart = machine_uart_type.make_new((mp_obj_type_t *)&machine_uart_type, 1, 1, &uart_wifi);
     //machine_uart_type wifi_uart = m_new_obj(machine_uart_type);
     //wifi_uart->make_new(WIFI_UART);
     if (&machine_uart_type != mp_obj_get_type(wifi_uart))
