@@ -352,10 +352,10 @@ STATIC mp_obj_t esp8266_active(size_t n_args, const mp_obj_t *args)
         if (mode != 0)
         {	
 			//esp8285 power on
-		mp_hal_pin_output(21);
-		mp_hal_pin_output(22);
-		mp_hal_pin_output(24);
-		mp_hal_pin_output(25);
+			mp_hal_pin_output(21);
+			mp_hal_pin_output(22);
+			mp_hal_pin_output(24);
+			mp_hal_pin_output(25);
 			gpio_put(21,1);
 			gpio_put(24,1);
 			gpio_put(22,1);
@@ -370,7 +370,13 @@ STATIC mp_obj_t esp8266_active(size_t n_args, const mp_obj_t *args)
         {
 			// esp8285 power down
 			mp_hal_pin_output(25);
+			mp_hal_pin_output(21);
+			mp_hal_pin_output(22);
+			mp_hal_pin_output(24);
 			gpio_put(25,1);
+			gpio_put(21,0);
+			gpio_put(24,0);
+			gpio_put(22,0);
 			mp_printf(MP_PYTHON_PRINTER, "esp8285 power off\n");
         }
         return mp_const_none;

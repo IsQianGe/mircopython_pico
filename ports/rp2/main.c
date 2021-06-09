@@ -107,8 +107,14 @@ int main(int argc, char **argv) {
         machine_pin_init();
         rp2_pio_init();
         // Execute _boot.py to set up the filesystem.
-        mp_hal_pin_output(25);
+		mp_hal_pin_output(25);
+		mp_hal_pin_output(21);
+		mp_hal_pin_output(22);
+		mp_hal_pin_output(24);
 		gpio_put(25,1);
+		gpio_put(21,0);
+		gpio_put(24,0);
+		gpio_put(22,0);
         pyexec_frozen_module("_boot.py");
 
         // Execute user scripts.
