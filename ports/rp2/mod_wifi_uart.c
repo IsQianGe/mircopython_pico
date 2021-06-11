@@ -362,7 +362,7 @@ STATIC mp_obj_t esp8266_active(size_t n_args, const mp_obj_t *args)
 			gpio_put(25,0);
             if (0 == eINIT(&self->esp8266, mode))
             {
-                nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_OSError, "couldn't init nic esp8266 ,try again please\n"));
+                mp_printf(MP_PYTHON_PRINTER, "couldn't init nic esp8266 ,try again please\n");
             }
             mod_network_register_nic((mp_obj_t)self);
         }
